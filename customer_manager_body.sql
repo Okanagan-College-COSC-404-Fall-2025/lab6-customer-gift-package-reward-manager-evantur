@@ -1,7 +1,24 @@
 CREATE OR REPLACE PACKAGE BODY CUSTOMER_MANAGER AS 
     FUNCTION GET_TOTAL_PURCHASE(customer_id IN NUMBER) RETURN NUMBER AS
+        v_sum NUMBER;
+        v_temp NUMBER;
+        CURSOR my_cursor IS
+            SELECT ORDER_ID 
+            FROM ORDERS
+            WHERE CUSTOMER_ID = customer_id;
+        my_record my_cursor%ROWTYPE;
     BEGIN
-        RETURN 5;
+        v_sum := 0;
+        OPEN my_cursor;
+        LOOP
+            FETCH my_cursor INTO my_record;
+            EXIT WHEN my_cursor%NOTFOUND;
+            SELECT SUM(UNIT_PRICE) INTO v_temp
+            FROM ORDER_ITEMS
+            WHERE ORDER_ID = my_record.ORDER_ID;
+            v_sum := v_sum + v_temp;
+        END LOOP;
+        RETURN v_sum;
     END GET_TOTAL_PURCHASE;
 
     FUNCTION CHOOSE_GIFT_PACKAGE(p_total_purchase IN NUMBER) RETURN NUMBER AS
@@ -26,7 +43,7 @@ CREATE OR REPLACE PACKAGE BODY CUSTOMER_MANAGER AS
             FETCH my_cursor INTO my_record;
             EXIT WHEN my_cursor%NOTFOUND;
             INSERT INTO CUSTOMER_REWARDS (CUSTOMER_EMAIL, GIFT_ID, REWARD_DATE) 
-            VALUES (my_record.CUSTOMER_EMAIL, CHOOSE_GIFT_PACKAGE(GET_TOTAL_PURCHASE(my_record.CUSTOMER_ID)), SYSDATE);
+            VALUES (my_record.EMAIL_ADDRESS, CHOOSE_GIFT_PACKAGE(GET_TOTAL_PURCHASE(my_record.CUSTOMER_ID)), SYSDATE);
         END LOOP;
         CLOSE my_cursor;
     END ASSIGN_GIFTS_TO_ALL;
