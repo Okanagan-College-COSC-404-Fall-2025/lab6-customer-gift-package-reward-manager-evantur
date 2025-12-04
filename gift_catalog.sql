@@ -1,0 +1,6 @@
+CREATE TABLE GIFT_CATALOG (
+    GIFT_ID NUMBER PRIMARY KEY,
+    MIN_PURCHASE NUMBER,
+    gifts gift_type
+)
+NESTED TABLE gifts STORE AS gifts_tab;
