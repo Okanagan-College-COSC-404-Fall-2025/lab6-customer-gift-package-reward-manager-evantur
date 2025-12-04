@@ -16,7 +16,18 @@ CREATE OR REPLACE PACKAGE BODY CUSTOMER_MANAGER AS
     END CHOOSE_GIFT_PACKAGE;
 
     PROCEDURE ASSIGN_GIFTS_TO_ALL IS
+        CURSOR my_cursor IS
+            SELECT CUSTOMER_ID, EMAIL_ADDRESS
+            FROM CUSTOMERS;
+        my_record my_cursor%ROWTYPE;
     BEGIN
-        DBMS_OUTPUT.PUT_LINE('bruh');
+        OPEN my_cursor;
+        LOOP
+            FETCH my_cursor INTO my_record;
+            EXIT WHEN my_cursor%NOTFOUND;
+            INSERT INTO CUSTOMER_REWARDS (CUSTOMER_EMAIL, GIFT_ID, REWARD_DATE) 
+            VALUES (my_record.CUSTOMER_EMAIL, CHOOSE_GIFT_PACKAGE(GET_TOTAL_PURCHASE(my_record.CUSTOMER_ID)), SYSDATE);
+        END LOOP;
+        CLOSE my_cursor;
     END ASSIGN_GIFTS_TO_ALL;
 END;
