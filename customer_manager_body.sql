@@ -18,6 +18,7 @@ CREATE OR REPLACE PACKAGE BODY CUSTOMER_MANAGER AS
             WHERE ORDER_ID = my_record.ORDER_ID;
             v_sum := v_sum + v_temp;
         END LOOP;
+        CLOSE my_cursor;
         RETURN v_sum;
     END GET_TOTAL_PURCHASE;
 
@@ -37,13 +38,17 @@ CREATE OR REPLACE PACKAGE BODY CUSTOMER_MANAGER AS
             SELECT CUSTOMER_ID, EMAIL_ADDRESS
             FROM CUSTOMERS;
         my_record my_cursor%ROWTYPE;
+        id NUMBER;
     BEGIN
         OPEN my_cursor;
         LOOP
             FETCH my_cursor INTO my_record;
             EXIT WHEN my_cursor%NOTFOUND;
-            INSERT INTO CUSTOMER_REWARDS (CUSTOMER_EMAIL, GIFT_ID, REWARD_DATE) 
-            VALUES (my_record.EMAIL_ADDRESS, CHOOSE_GIFT_PACKAGE(GET_TOTAL_PURCHASE(my_record.CUSTOMER_ID)), SYSDATE);
+            id := CHOOSE_GIFT_PACKAGE(GET_TOTAL_PURCHASE(my_record.CUSTOMER_ID));
+            IF id != NULL THEN
+                INSERT INTO CUSTOMER_REWARDS (CUSTOMER_EMAIL, GIFT_ID, REWARD_DATE) 
+                VALUES (my_record.EMAIL_ADDRESS, id, SYSDATE);
+            END IF;
         END LOOP;
         CLOSE my_cursor;
     END ASSIGN_GIFTS_TO_ALL;
